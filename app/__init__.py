@@ -11,7 +11,7 @@ from flask_bootstrap import Bootstrap
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
-login.login_view = 'login'
+login.login_view = 'auth.login'
 mail = Mail()
 moment = Moment()
 bootstrap = Bootstrap()

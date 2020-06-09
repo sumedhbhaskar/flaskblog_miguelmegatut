@@ -1,12 +1,13 @@
 from flask import current_app
 from flask import render_template, redirect, flash, url_for, request
-from app.forms import ResetPasswordForm ,ResetPasswordRequestForm,LoginForm,RegistrationForm, EditProfileForm,EmptyForm, PostForm
+from app.main.forms import EditProfileForm,EmptyForm, PostForm
 from app.models import User,Post
 from flask_login import current_user, login_user, logout_user, login_required 
 from werkzeug.urls import url_parse
 from app import db
 from datetime import datetime
-from app.email import send_password_reset_email
+
+from app.main import bp
 
 
 @bp.route('/', methods = ['GET','POST'])
@@ -28,7 +29,7 @@ def index():
     
     return render_template('index.html',title='Home',posts=posts.items,form = form,next_url = next_url,prev_url = prev_url)
     
-@app.route('/user/<username>')
+@bp.route('/user/<username>')
 @login_required
 def user(username):
     form = EmptyForm()
@@ -112,7 +113,7 @@ def unfollow(username):
 def explore():
 
     page = request.args.get('page',1,type = int) 
-    posts = Post.query.order_by(Post.timestamp.desc()).paginate(page,app.config['POSTS_PER_PAGE'],False)
+    posts = Post.query.order_by(Post.timestamp.desc()).paginate(page,current_app.config['POSTS_PER_PAGE'],False)
     next_url = url_for('main.explore',page = posts.next_num) if posts.has_next else None
     prev_url = url_for('main.explore',page = posts.prev_num) if posts.has_prev else None
     

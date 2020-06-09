@@ -1,12 +1,13 @@
 from flask import current_app
 from flask import render_template, redirect, flash, url_for, request
-from app.forms import ResetPasswordForm ,ResetPasswordRequestForm,LoginForm,RegistrationForm, EditProfileForm,EmptyForm, PostForm
+from app.auth.forms import ResetPasswordForm ,ResetPasswordRequestForm,LoginForm,RegistrationForm
 from app.models import User,Post
 from flask_login import current_user, login_user, logout_user, login_required 
 from werkzeug.urls import url_parse
 from app import db
 from datetime import datetime
-from app.email import send_password_reset_email
+from app.auth.email import send_password_reset_email
+from app.auth import bp
 
 
 @bp.route('/login', methods = ['GET','POST'])
@@ -36,7 +37,7 @@ def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
-@app.route('/register',methods = ['GET','POST'])
+@bp.route('/register',methods = ['GET','POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
@@ -52,22 +53,9 @@ def register():
     return render_template('auth/registration.html',title = 'Register',form = form)    
 
 
-@app.route('/user/<username>')
-@login_required
-def user(username):
-    form = EmptyForm()
-    
-    user = User.query.filter_by(username = username).first_or_404()
-    page = request.args.get('page',1,type = int)
-    posts = user.posts.order_by(Post.timestamp.desc()).paginate(page,current_app.config['POSTS_PER_PAGE'],False) 
-    next_url = url_for('main.user', username=user.username, page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('main.user', username=user.username, page=posts.prev_num) \
-        if posts.has_prev else None
-        
-    return render_template('user.html', user=user, posts=posts.items, form=form, next_url = next_url,prev_url = prev_url)
+
    
-@app.route('/reset_password_request',methods= ['GET','POST'])
+@bp.route('/reset_password_request',methods= ['GET','POST'])
 def reset_password_request():
     if current_user.is_authenticated:
         redirect(url_for('main.index'))
@@ -80,7 +68,7 @@ def reset_password_request():
         return redirect(url_for('auth.login'))
     return render_template('reset_password_request.html',title= 'Reset Password', form= form)
             
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+@bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
